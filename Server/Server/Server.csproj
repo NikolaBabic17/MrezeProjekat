@@ -55,6 +55,9 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Klase\Karta.cs" />
+    <Compile Include="Klase\Protivnik.cs" />
+    <Compile Include="Klase\Traka.cs" />
     <Compile Include="NewMain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
