@@ -47,6 +47,7 @@ namespace Server.Klase
             {
                 protivnici.Add(new Protivnik("Plavi, Zeleni ili Crveni se pomeraju 1 polje unazad", 0));
             }
+
             return protivnici;
         }
     }
