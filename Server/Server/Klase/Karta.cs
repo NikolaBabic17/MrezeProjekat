@@ -17,9 +17,9 @@ namespace Server.Klase
 {
     internal class Karta
     {
-        string Naziv;
-        String Efekat;
-        BojaKarte Boja;
+        public string Naziv;
+        public String Efekat;
+        public BojaKarte Boja;
 
         public Karta(string naziv, string efekat, BojaKarte boja)
         {
@@ -28,7 +28,9 @@ namespace Server.Klase
             Boja = boja;
         }
 
-        List<Karta> KreirajSpil(int brojIgraca)
+        // TODO: Mozda treba biti funkcija van Karta klase
+        //       da ne bi imali kartaHelper?
+        public List<Karta> KreirajSpil(int brojIgraca)
         {
             List<Karta> Spil = new List<Karta>();
             
