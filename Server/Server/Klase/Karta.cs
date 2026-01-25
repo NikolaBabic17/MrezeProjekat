@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-enum BojaKarte
+public enum BojaKarte
 {
     Crvena,
     Plava,
@@ -15,7 +15,7 @@ enum BojaKarte
 
 namespace Server.Klase
 {
-    internal class Karta
+    public class Karta
     {
         public string Naziv;
         public String Efekat;

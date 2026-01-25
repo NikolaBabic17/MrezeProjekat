@@ -38,7 +38,7 @@ namespace Server
                 {
                     igraci.Add(senderEP);
                     Console.WriteLine($"Igrac prijavljen: {senderEP}");
-                    Console.WriteLine($"Jos je potrebno {igraci.Count} igraca");
+                    Console.WriteLine($"Jos je potrebno {igraci.Count-1} igraca");
                 }
             }
 
@@ -96,7 +96,7 @@ namespace Server
                 for (int i = 0; i < brojKarataPoIgracu; i++)
                 {
                     Karta k = spil[indexSpila++];
-                    string poruka = k.Naziv + "|" + k.Boja + "|" + k.Efekat;
+                    string poruka = k.Naziv + "|" + k.Boja + "|" + k.Efekat + "\n";
                     byte[] data = Encoding.UTF8.GetBytes(poruka);
                     igrac.Send(data);   
                 }
