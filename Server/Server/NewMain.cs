@@ -85,8 +85,7 @@ namespace Server
             }
 
             // NOTE: Kreiranje i dodela karata
-            Karta kartaHelper = new Karta("", "", BojaKarte.Plava);
-            List<Karta> spil = kartaHelper.KreirajSpil(brojIgraca);
+            List<Karta> spil = new KreirajSpit().KreirajSpil(brojIgraca);
 
             int brojKarataPoIgracu = (brojIgraca == 1) ? 6 : 5;
             int indexSpila = 0;

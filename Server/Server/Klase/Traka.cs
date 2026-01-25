@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Server.Interfejs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,13 +16,13 @@ namespace Server.Klase
 {
     internal class Traka
     {
-        int BrojIgraca;
-        Boja BojaTrake;
-        List<Protivnik> Protivnici;
-        List<Protivnik> StrelacZona;
-        List<Protivnik> VitezZona;
-        List<Protivnik> MacevalacZona;
-        int BrojZidinaZamka;
+        public int BrojIgraca;
+        public Boja BojaTrake;
+        public List<Protivnik> Protivnici;
+        public List<Protivnik> StrelacZona;
+        public List<Protivnik> VitezZona;
+        public List<Protivnik> MacevalacZona;
+        public int BrojZidinaZamka;
 
         public Traka(int brojIgraca, Boja bojaTrake)
         {
@@ -33,6 +34,5 @@ namespace Server.Klase
             MacevalacZona = new List<Protivnik>();
             BrojZidinaZamka = 2;
         }
-
     }
 }
