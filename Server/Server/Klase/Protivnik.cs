@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Server.Interfejs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server.Klase
 {
-    internal class Protivnik
+    internal class Protivnik : IKreirajProtivnike
     {
         public string Ime { get; set; }
         public int Poeni { get; set; }
@@ -49,6 +50,24 @@ namespace Server.Klase
             }
 
             return protivnici;
+        }
+
+        public void IzbrisiProtivnika(Protivnik protivnik, List<Protivnik> protivnici)
+        {
+            protivnici.Remove(protivnik);
+        }
+
+        public Protivnik PretraziProtivnika(string imeProtivnika, List<Protivnik> protivnici)
+        {
+            foreach (var protivnik in protivnici)
+            {
+                if (protivnik.Ime == imeProtivnika)
+                {
+                    IzbrisiProtivnika(protivnik, protivnici);
+                    return protivnik;
+                }
+            }
+            return null;
         }
     }
 }
