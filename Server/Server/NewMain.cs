@@ -6,13 +6,22 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Server.Klase;
+using Server.Interfejs;
 
 namespace Server
 {
     internal class NewMain
     {
+        IKreirajProtivnike kreirajProtivnike;
+        INapraviMapu napraviMapu;
+        IZapocniIgru ZapocniIgru;
+
         public void Run()
         {
+            kreirajProtivnike = new Protivnik("",0);
+            napraviMapu = new KreirajMapu();
+            ZapocniIgru = new ZapocniIgru(kreirajProtivnike);
+
             Console.Write("Unesite broj igraca (1-3):");
             int brojIgraca = int.Parse(Console.ReadLine());
 
@@ -40,23 +49,6 @@ namespace Server
                     Console.WriteLine($"Igrac prijavljen: {senderEP}");
                     Console.WriteLine($"Jos je potrebno {igraci.Count-1} igraca");
                 }
-            }
-
-            //=================//
-            // Kreiranje Traka //
-            //=================//
-            List<Traka> trake = new List<Traka>();
-            int brojTraka = brojIgraca * 2;
-
-            Boja[] boje = { Boja.Plava, Boja.Zelena, Boja.Crvena };
-
-            for (int i = 0; i < brojTraka; i++)
-            {
-                Boja bojaTrake = boje[i / 2];
-                Traka traka = new Traka(brojIgraca, bojaTrake);
-                trake.Add(traka);
-
-                Console.WriteLine($"Traka {i + 1} - {bojaTrake}");
             }
 
             //============//
@@ -89,6 +81,11 @@ namespace Server
 
             int brojKarataPoIgracu = (brojIgraca == 1) ? 6 : 5;
             int indexSpila = 0;
+
+            List<Traka> trake = napraviMapu.kreirajMapu(brojIgraca);
+            List<Protivnik> protivnici = kreirajProtivnike.KreirajProtivnike();
+
+            ZapocniIgru.ZapocniIgru(brojIgraca, trake, protivnici);
 
             foreach (Socket igrac in tcpIgraci)
             {

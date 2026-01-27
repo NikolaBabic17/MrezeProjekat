@@ -10,23 +10,19 @@ namespace Server.Klase
 {
     internal class ZapocniIgru : IZapocniIgru
     {
-        INapraviMapu napraviMapu;
         IKreirajProtivnike kreirajProtivnike;
-        public ZapocniIgru(INapraviMapu kreirajMapu, IKreirajProtivnike kreirajProtivnike)
+        public ZapocniIgru(IKreirajProtivnike kreirajProtivnike)
         {
-            this.napraviMapu = kreirajMapu;
             this.kreirajProtivnike = kreirajProtivnike;
         }
 
         //Logika za zapocinjanje igre
-        void IZapocniIgru.ZapocniIgru(int brojIgraca)
+        void IZapocniIgru.ZapocniIgru(int brojIgraca, List<Traka> trake, List<Protivnik> protivnici)
         {
-            List<Traka> trake = napraviMapu.kreirajMapu(brojIgraca);
-            List<Protivnik> protivnici = kreirajProtivnike.KreirajProtivnike();
             Random rand = new Random();
             switch (trake.Count)
             {
-                case 1:
+                case 2:
                     //Logika za 1 igraca
                     int traka1a = rand.Next(trake.Count);
                     int traka2a = rand.Next(trake.Count);
@@ -37,7 +33,7 @@ namespace Server.Klase
                     trake[traka1a].StrelacZona.Add(p1a);
                     trake[traka2a].StrelacZona.Add(p2a);
                     break;
-                case 2:
+                case 4:
                     //logika za 2 igraca
                     int traka1b = rand.Next(trake.Count);
                     int traka2b = rand.Next(trake.Count);
@@ -55,7 +51,7 @@ namespace Server.Klase
                     trake[traka4b].StrelacZona.Add(p4b);
 
                     break;
-                case 3:
+                case 6:
                     //logika za 3 igraca
                     int traka1c = rand.Next(trake.Count);
                     int traka2c = rand.Next(trake.Count);

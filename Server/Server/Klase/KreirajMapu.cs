@@ -15,22 +15,22 @@ namespace Server.Klase
             switch (brojIgraca)
             {
                 case 1:
-                    trake.Add(new Traka(1, Boja.Crvena));
-                    trake.Add(new Traka(1, Boja.Zelena));
+                    trake.Add(new Traka(1, Boja.Plava));
+                    trake.Add(new Traka(1, Boja.Plava));
                     break;
                 case 2:
-                    trake.Add(new Traka(2, Boja.Crvena));
-                    trake.Add(new Traka(2, Boja.Zelena));
                     trake.Add(new Traka(2, Boja.Plava));
-                    trake.Add(new Traka(2, Boja.Crvena));
+                    trake.Add(new Traka(2, Boja.Plava));
+                    trake.Add(new Traka(2, Boja.Zelena));
+                    trake.Add(new Traka(2, Boja.Zelena));
                     break;
                 case 3:
-                    trake.Add(new Traka(3, Boja.Crvena));
-                    trake.Add(new Traka(3, Boja.Zelena));
                     trake.Add(new Traka(3, Boja.Plava));
-                    trake.Add(new Traka(3, Boja.Crvena));
-                    trake.Add(new Traka(3, Boja.Zelena));
                     trake.Add(new Traka(3, Boja.Plava));
+                    trake.Add(new Traka(3, Boja.Zelena));
+                    trake.Add(new Traka(3, Boja.Zelena));
+                    trake.Add(new Traka(3, Boja.Crvena));
+                    trake.Add(new Traka(3, Boja.Crvena));
                     break;
                 default:
                     throw new Exception();

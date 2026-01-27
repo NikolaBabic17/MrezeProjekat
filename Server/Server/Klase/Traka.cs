@@ -18,7 +18,7 @@ namespace Server.Klase
     {
         public int BrojIgraca;
         public Boja BojaTrake;
-        public List<Protivnik> Protivnici;
+        public List<Protivnik> SumaZona;
         public List<Protivnik> StrelacZona;
         public List<Protivnik> VitezZona;
         public List<Protivnik> MacevalacZona;
@@ -28,7 +28,7 @@ namespace Server.Klase
         {
             BrojIgraca = brojIgraca;
             BojaTrake = bojaTrake;
-            Protivnici = new List<Protivnik>();
+            SumaZona = new List<Protivnik>();
             StrelacZona = new List<Protivnik>();
             VitezZona = new List<Protivnik>();
             MacevalacZona = new List<Protivnik>();

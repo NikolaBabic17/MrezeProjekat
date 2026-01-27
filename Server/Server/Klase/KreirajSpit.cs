@@ -65,7 +65,9 @@ namespace Server.Klase
         BojaKarte IzaberiBoju(int brojIgraca, Random rand)
         {
             if (brojIgraca == 1)
-                return rand.Next(0, 2) == 0 ? BojaKarte.Crvena : BojaKarte.Zelena;
+                return BojaKarte.Plava;
+            if (brojIgraca == 2)
+                return rand.Next(0, 2) == 0 ? BojaKarte.Plava : BojaKarte.Zelena;
 
             int izbor = rand.Next(0, 3);
             return (BojaKarte)izbor;
