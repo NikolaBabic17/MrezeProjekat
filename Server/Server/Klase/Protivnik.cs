@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server.Klase
 {
-    internal class Protivnik : IKreirajProtivnike
+    public class Protivnik : IKreirajProtivnike
     {
         public string Ime { get; set; }
         public int Poeni { get; set; }

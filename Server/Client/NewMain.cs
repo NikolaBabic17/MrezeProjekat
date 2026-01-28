@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Server.Klase;
 
@@ -11,6 +12,11 @@ namespace Client
 {
     internal class NewMain
     {
+        private void IspisiKartu(Karta k)
+        {
+            Console.WriteLine($"{k.Naziv} ({k.Boja}) - {k.Efekat}");
+        }
+
         public void Run()
         {
             //=============//
@@ -69,48 +75,137 @@ namespace Client
 
             Console.WriteLine("TCP konekcija uspostavljena.");
 
-            //==============//
-            // Primi karte  //
-            //==============//
+            //===========//
+            // Main loop //
+            //===========//
+            List<Traka> trake = new List<Traka>(6);
             List<Karta> mojeKarte = new List<Karta>();
+
             string bufferText = "";
+            byte[] recvBuffer = new byte[1024];
 
-            int ocekivaniBrojKarata = 6;
+            bool citamMapu = false;
+            bool citamKarte = false;
+            Traka trenutnaTraka = null;
+            Karta trenutnaKarta = null;
 
-            while (mojeKarte.Count < ocekivaniBrojKarata)
+            while (true)
             {
-                byte[] porukaBuffer = new byte[1024];
-                int porukaBytes;
+                int dataReceived = tcpSocket.Receive(recvBuffer);
+                if (dataReceived == 0)
+                    continue;
 
-                porukaBytes = tcpSocket.Receive(porukaBuffer);
-
-                if (porukaBytes == 0)
-                    break;
-
-                bufferText += Encoding.UTF8.GetString(porukaBuffer, 0, porukaBytes);
+                bufferText += Encoding.UTF8.GetString(recvBuffer, 0, dataReceived);
 
                 while (bufferText.Contains("\n"))
                 {
-                    int index = bufferText.IndexOf("\n");
-                    string linija = bufferText.Substring(0, index);
-                    bufferText = bufferText.Substring(index + 1);
+                    int idx = bufferText.IndexOf("\n");
+                    string linija = bufferText.Substring(0, idx).Trim();
+                    bufferText = bufferText.Substring(idx + 1);
 
-                    // NOTE: Format: Naziv|Boja|Efekat
-                    string[] p = linija.Split('|');
-
-                    if (p.Length != 3)
+                    if (linija.Length == 0)
                         continue;
 
-                    Karta karta = new Karta(
-                        p[0],
-                        p[2],
-                        (BojaKarte)Enum.Parse(typeof(BojaKarte), p[1])
-                    );
+                    //================//
+                    // MAP PROTOKOL   //
+                    //================//
+                    if (linija == "MAPSTART")
+                    {
+                        citamMapu = true;
+                        continue;
+                    }
 
-                    mojeKarte.Add(karta);
+                    if (linija == "MAPEND")
+                    {
+                        citamMapu = false;
+                        continue;
+                    }
+
+                    if(linija == "KARTESTART")
+                    {
+                        citamKarte = true;
+                        continue;
+                    }
+                    if(linija == "KARTEEND")
+                    {
+                        citamKarte = false;
+                        continue;
+                    }
+
+                    if (citamMapu)
+                    {
+                        string[] part = linija.Split(' ');
+
+                        // TRACK Index Boja HP
+                        if (part[0] == "TRACK")
+                        {
+                            // TRACK index boja hp
+                            Boja boja = (Boja)Enum.Parse(typeof(Boja), part[2]);
+                            int hp = int.Parse(part[3]);
+                            int index = int.Parse(part[1]);
+
+                            trenutnaTraka = new Traka(0, boja);
+                            trenutnaTraka.BrojZidinaZamka = hp;
+
+                            trake.Insert(index, trenutnaTraka);
+                            continue;
+                        }
+
+                        if (part[0] == "ENDTRACK")
+                        {
+                            trenutnaTraka = null;
+                            continue;
+                        }
+
+                        // ZONE ENEMY
+                        // SUMA ENEMY Goblin 1
+                        if (part[1] == "ENEMY" && trenutnaTraka != null)
+                        {
+                            string zona = part[0];
+                            string ime = part[2];
+                            int hp = int.Parse(part[3]);
+
+                            Protivnik p = new Protivnik(ime, hp);
+
+                            if (zona == "SUMA")
+                                trenutnaTraka.SumaZona.Add(p);
+                            else if (zona == "STRELAC")
+                                trenutnaTraka.StrelacZona.Add(p);
+                            else if (zona == "VITEZ")
+                                trenutnaTraka.VitezZona.Add(p);
+                            else if (zona == "MACEVALAC")
+                                trenutnaTraka.MacevalacZona.Add(p);
+
+                            continue;
+                        }
+                    }
+
+                    //================//
+                    // KARTE          //
+                    //================//
+                    if (citamKarte)
+                    {
+                        // Naziv|Boja|Efekat
+                        string[] part = linija.Split(' ');
+                        if (part[0] == "NAZIV")
+                        {
+                            trenutnaKarta = new Karta(part[1], "", 0);
+                        }
+                        if (part[0] == "EFEKAT")
+                        {
+                            int spaceIndex = linija.IndexOf(' ');
+                            string key = linija.Substring(spaceIndex + 1);
+                            trenutnaKarta.Efekat = key;
+                        }
+                        if (part[0] == "BOJA")
+                        {
+                            trenutnaKarta.Boja = (BojaKarte)Enum.Parse(typeof(BojaKarte), part[1]);
+                            mojeKarte.Add(trenutnaKarta);
+                            IspisiKartu(trenutnaKarta);
+                        }
+                    }
                 }
             }
-
             // NOTE: Ispis karata
             Console.WriteLine("\nDodeljene karte:");
 

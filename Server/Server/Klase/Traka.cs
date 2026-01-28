@@ -14,7 +14,7 @@ public enum Boja
 
 namespace Server.Klase
 {
-    internal class Traka
+    public class Traka
     {
         public int BrojIgraca;
         public Boja BojaTrake;
