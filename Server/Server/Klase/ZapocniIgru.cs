@@ -20,57 +20,91 @@ namespace Server.Klase
         void IZapocniIgru.ZapocniIgru(int brojIgraca, List<Traka> trake, List<Protivnik> protivnici)
         {
             Random rand = new Random();
+            List<int> brojevi=new List<int>();
             switch (trake.Count)
             {
                 case 2:
                     //Logika za 1 igraca
-                    int traka1a = rand.Next(trake.Count);
-                    int traka2a = rand.Next(trake.Count);
-
                     Protivnik p1a = kreirajProtivnike.PretraziProtivnika("Goblin", protivnici);
                     Protivnik p2a = kreirajProtivnike.PretraziProtivnika("Trol", protivnici);
+                    
+                    brojevi = KreirajListuBrojeva(trake.Count);
 
-                    trake[traka1a].StrelacZona.Add(p1a);
-                    trake[traka2a].StrelacZona.Add(p2a);
+                    int traka1a = rand.Next(brojevi.Count);
+                    trake[brojevi[traka1a]].StrelacZona.Add(p1a);
+                    brojevi.Remove(traka1a);
+
+                    int traka2a = rand.Next(brojevi.Count);
+                    trake[brojevi[traka2a]].StrelacZona.Add(p2a);
+                    brojevi.Remove(traka2a);
+
                     break;
                 case 4:
                     //logika za 2 igraca
-                    int traka1b = rand.Next(trake.Count);
-                    int traka2b = rand.Next(trake.Count);
-                    int traka3b = rand.Next(trake.Count);
-                    int traka4b = rand.Next(trake.Count);
-
                     Protivnik p1b = kreirajProtivnike.PretraziProtivnika("Goblin", protivnici);
                     Protivnik p2b = kreirajProtivnike.PretraziProtivnika("Ork", protivnici);
                     Protivnik p3b = kreirajProtivnike.PretraziProtivnika("Trol", protivnici);
                     Protivnik p4b = kreirajProtivnike.PretraziProtivnika("Trol", protivnici);
 
-                    trake[traka1b].StrelacZona.Add(p1b);
+                    brojevi = KreirajListuBrojeva(trake.Count);
+
+                    int traka1b = rand.Next(brojevi.Count);
+                    trake[brojevi[traka1b]].StrelacZona.Add(p1b);
+                    brojevi.Remove(traka1b);
+
+                    int traka2b = rand.Next(brojevi.Count);
                     trake[traka2b].StrelacZona.Add(p2b);
-                    trake[traka3b].StrelacZona.Add(p3b);
-                    trake[traka4b].StrelacZona.Add(p4b);
+                    brojevi.Remove(traka2b);
+
+                    int traka3b = rand.Next(brojevi.Count);
+                    trake[brojevi[traka3b]].StrelacZona.Add(p3b);
+                    brojevi.Remove(traka3b);
+
+                    int traka4b = rand.Next(brojevi.Count);
+                    trake[brojevi[traka4b]].StrelacZona.Add(p4b);
+                    brojevi.Remove(traka4b);
+
 
                     break;
                 case 6:
                     //logika za 3 igraca
-                    int traka1c = rand.Next(trake.Count);
-                    int traka2c = rand.Next(trake.Count);
-                    int traka3c = rand.Next(trake.Count);
-                    int traka4c = rand.Next(trake.Count);
-
                     Protivnik p1c = kreirajProtivnike.PretraziProtivnika("Goblin", protivnici);
                     Protivnik p2c = kreirajProtivnike.PretraziProtivnika("Ork", protivnici);
                     Protivnik p3c = kreirajProtivnike.PretraziProtivnika("Trol", protivnici);
                     Protivnik p4c = kreirajProtivnike.PretraziProtivnika("Trol", protivnici);
+                    
+                    brojevi = KreirajListuBrojeva(trake.Count);
 
-                    trake[traka1c].StrelacZona.Add(p1c);
-                    trake[traka2c].StrelacZona.Add(p2c);
-                    trake[traka3c].StrelacZona.Add(p3c);
-                    trake[traka4c].StrelacZona.Add(p4c);
+                    int traka1c = rand.Next(brojevi.Count);
+                    trake[brojevi[traka1c]].StrelacZona.Add(p1c);
+                    brojevi.Remove(traka1c);
+
+                    int traka2c = rand.Next(brojevi.Count);
+                    trake[brojevi[traka2c]].StrelacZona.Add(p2c);
+                    brojevi.Remove(traka2c);
+
+                    int traka3c = rand.Next(brojevi.Count);
+                    trake[brojevi[traka3c]].StrelacZona.Add(p3c);
+                    brojevi.Remove(traka3c);
+
+                    int traka4c = rand.Next(brojevi.Count);
+                    trake[brojevi[traka4c]].StrelacZona.Add(p4c);
+                    brojevi.Remove(traka4c);
+
                     break;
                 default:
                     throw new Exception();
             }
+        }
+
+        public List<int> KreirajListuBrojeva(int brojTraka)
+        {
+            List<int>trake = new List<int>();
+            for (int i = 0; i<brojTraka; i++)
+            {
+                trake.Add(i);
+            }
+            return trake;
         }
     }
 }
