@@ -22,7 +22,7 @@ namespace Server.Klase
 
             for (int i = 0; i < 3; i++)
             {
-                Spil.Add(new Karta("Vitaz", "Udara jednog protivnika u vitez zoni", IzaberiBoju(brojIgraca, rand)));
+                Spil.Add(new Karta("Vitez", "Udara jednog protivnika u vitez zoni", IzaberiBoju(brojIgraca, rand)));
             }
 
             for (int i = 0; i < 3; i++)

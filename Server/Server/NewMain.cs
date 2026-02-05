@@ -18,6 +18,12 @@ namespace Server
         INapraviMapu napraviMapu;
         IZapocniIgru ZapocniIgru;
 
+        class ClientState
+        {
+            public Socket Socket;
+            public string Buffer = "";
+        }
+
         private void IscrtajTrake(List<Traka> trake)
         {
             Console.WriteLine("\n===== STANJE TRAKA =====\n");
@@ -47,40 +53,37 @@ namespace Server
             }
         }
 
+        //===============================//
+        // Slanje informacija klijentima //
+        //===============================//
         void SendLine(Socket igrac, string line)
         {
             byte[] data = Encoding.UTF8.GetBytes(line + "\n");
             igrac.Send(data);
         }
-
-        // KARTESTART
-        // NAZIV Vitez
-        // EFAKAT Udara jednog protivnika u vitez zoni
-        // BOJA Ljubicasta
-        // KARTEEND
         private void PosaljiKarte(Socket igrac, List<Karta> karte)
         {
+            // KARTESTART
+            // Vitez|Udara jednog protivnika u vitez zoni|Ljubicasta
+            // KARTEEND
             SendLine(igrac, "KARTESTART");
             for (int i = 0; i < karte.Count; i++)
             {
                 Karta k = karte[i];
-                SendLine(igrac, $"NAZIV {k.Naziv}");
-                SendLine(igrac, $"EFEKAT {k.Efekat}");
-                SendLine(igrac, $"BOJA {k.Boja}");
+                SendLine(igrac, $"{k.Naziv}|{k.Efekat}|{k.Boja}");
             }
             SendLine(igrac, "KARTEEND");
         }
-
-        // MAPSTART
-        // TRACK 0 Plava 2
-        // STRELAC ENEMY Goblin 1
-        // ENDTRACK
-        // TRACK 1 Plava 2
-        // VITEZ ENEMY Trol 3
-        // ENDTRACK
-        // MAPEND
         private void PosaljiMapu(Socket igrac, List<Traka> trake)
         {
+            // MAPSTART
+            // TRACK 0 Plava 2
+            // STRELAC ENEMY Goblin 1
+            // ENDTRACK
+            // TRACK 1 Plava 2
+            // VITEZ ENEMY Trol 3
+            // ENDTRACK
+            // MAPEND
             SendLine(igrac, "MAPSTART");
 
             for (int i = 0; i < trake.Count; i++)
@@ -106,6 +109,146 @@ namespace Server
             }
 
             SendLine(igrac, "MAPEND");
+        }
+        private void PosaljiUDPInfo(Socket igrac, List<EndPoint> igraci)
+        {
+            // UDPINFOSTART
+            // 127.0.0.1 65145
+            // UDPINFOEND
+            SendLine(igrac, "UDPINFOSTART");
+
+            foreach(EndPoint p in igraci)
+            {
+                IPEndPoint ip = p as IPEndPoint;
+                SendLine(igrac, $"{ip.Address} {ip.Port}");
+            }
+
+            SendLine(igrac, "UDPINFOEND");
+        }
+
+        private void AktivirajKartu(List<Traka> trake, string[] komandaDelovi)
+        {
+            string imeKarte = komandaDelovi[1];
+            int indeksTrake = int.Parse(komandaDelovi[4]);
+            if (imeKarte == "Pojacanje zida")
+            {
+                trake[indeksTrake].BrojZidinaZamka += 1;
+            }
+            else
+            {
+                string imeZone = komandaDelovi[5];
+                int indeksProtivnika = int.Parse(komandaDelovi[6]);
+                if (imeKarte == "Vracanje nazad")
+                {
+                    if (imeZone == "Suma")
+                    {
+                        Protivnik p = trake[indeksTrake].SumaZona[indeksProtivnika];
+                        trake[indeksTrake].SumaZona.RemoveAt(indeksProtivnika);
+                        trake[indeksTrake].SumaZona.Add(p);
+                    }
+                    if (imeZone == "Strelac")
+                    {
+                        Protivnik p = trake[indeksTrake].StrelacZona[indeksProtivnika];
+                        trake[indeksTrake].StrelacZona.RemoveAt(indeksProtivnika);
+                        trake[indeksTrake].SumaZona.Add(p);
+                    }
+                    if (imeZone == "Vitez")
+                    {
+                        Protivnik p = trake[indeksTrake].VitezZona[indeksProtivnika];
+                        trake[indeksTrake].VitezZona.RemoveAt(indeksProtivnika);
+                        trake[indeksTrake].SumaZona.Add(p);
+                    }
+                    if (imeZone == "Macevalac")
+                    {
+                        Protivnik p = trake[indeksTrake].MacevalacZona[indeksProtivnika];
+                        trake[indeksTrake].MacevalacZona.RemoveAt(indeksProtivnika);
+                        trake[indeksTrake].SumaZona.Add(p);
+                    }
+                }
+                else
+                {
+                    if (imeZone == "Suma")
+                    {
+                        trake[indeksTrake].SumaZona[indeksProtivnika].Poeni -= 1;
+                        if (trake[indeksTrake].SumaZona[indeksProtivnika].Poeni <= 0)
+                        {
+                            trake[indeksTrake].SumaZona.RemoveAt(indeksProtivnika);
+                        }
+                    }
+                    if (imeZone == "Strelac")
+                    {
+                        trake[indeksTrake].StrelacZona[indeksProtivnika].Poeni -= 1;
+                        if (trake[indeksTrake].StrelacZona[indeksProtivnika].Poeni <= 0)
+                        {
+                            trake[indeksTrake].StrelacZona.RemoveAt(indeksProtivnika);
+                        }
+                    }
+                    if (imeZone == "Vitez")
+                    {
+                        trake[indeksTrake].VitezZona[indeksProtivnika].Poeni -= 1;
+                        if (trake[indeksTrake].VitezZona[indeksProtivnika].Poeni <= 0)
+                        {
+                            trake[indeksTrake].VitezZona.RemoveAt(indeksProtivnika);
+                        }
+                    }
+                    if (imeZone == "Macevalac")
+                    {
+                        trake[indeksTrake].MacevalacZona[indeksProtivnika].Poeni -= 1;
+                        if (trake[indeksTrake].MacevalacZona[indeksProtivnika].Poeni <= 0)
+                        {
+                            trake[indeksTrake].MacevalacZona.RemoveAt(indeksProtivnika);
+                        }
+                    }
+                }
+            }
+        }
+
+        private Dictionary<Socket, string> CekajPorukeOdSvih(List<ClientState> klijenti)
+        {
+            Dictionary<Socket, string> odgovori = new Dictionary<Socket, string>();
+
+            while (odgovori.Count < klijenti.Count)
+            {
+                List<Socket> read = new List<Socket>();
+
+                foreach (var k in klijenti)
+                    if (!odgovori.ContainsKey(k.Socket))
+                        read.Add(k.Socket);
+
+                Socket.Select(read, null, null, 100000);
+
+                foreach (Socket s in read)
+                {
+                    byte[] buf = new byte[1024];
+                    int bytes = s.Receive(buf);
+
+                    if (bytes <= 0)
+                        continue;
+
+                    string msg = Encoding.UTF8.GetString(buf, 0, bytes).Trim();
+
+                    odgovori[s] = msg;
+                }
+            }
+
+            return odgovori;
+        }
+
+        private void PomeriProtivnike(List<Traka> trake)
+        {
+            foreach (Traka t in trake)
+            {
+                t.BrojZidinaZamka -= t.MacevalacZona.Count();
+
+                t.MacevalacZona.AddRange(t.VitezZona);
+                t.VitezZona.Clear();
+
+                t.VitezZona.AddRange(t.StrelacZona);
+                t.StrelacZona.Clear();
+
+                t.StrelacZona.AddRange(t.SumaZona);
+                t.SumaZona.Clear();
+            }
         }
 
         public void Run()
@@ -139,7 +282,7 @@ namespace Server
                 {
                     igraci.Add(senderEP);
                     Console.WriteLine($"Igrac prijavljen: {senderEP}");
-                    Console.WriteLine($"Jos je potrebno {igraci.Count-1} igraca");
+                    Console.WriteLine($"Jos je potrebno {brojIgraca - igraci.Count} igraca");
                 }
             }
 
@@ -174,18 +317,85 @@ namespace Server
             List<Traka> trake = napraviMapu.kreirajMapu(brojIgraca);
             List<Protivnik> protivnici = kreirajProtivnike.KreirajProtivnike();
 
-            // TODO: Lose rasporedjuje protivnike po trakama
             ZapocniIgru.ZapocniIgru(brojIgraca, trake, protivnici);
             IscrtajTrake(trake);
 
+            ILogikaSpila dodelaSpila = new LogikaSpila();
+            ISpamovanjeProtivnika protivnikSpawner = new SpamovanjeProtivnika();
+            
             foreach (Socket igrac in tcpIgraci)
             {
                 PosaljiMapu(igrac, trake);
-                PosaljiKarte(igrac, karte); // NOTE: Trenutno salje sve karte
+                PosaljiKarte(igrac, dodelaSpila.DodeliKarteIzSpila(karte, brojIgraca));
+                PosaljiUDPInfo(igrac, igraci);
+            }
+            Console.WriteLine("Igra inicijalizovana.");
+
+
+            List<ClientState> klijenti = new List<ClientState>();
+
+            foreach (Socket s in tcpIgraci)
+            {
+                klijenti.Add(new ClientState { Socket = s });
             }
 
-            Console.WriteLine("Igra inicijalizovana.");
-            Console.ReadKey();
+            //int trenutniPotez = 0;
+            //===========//
+            // Main loop //
+            //===========//
+            while (true)
+            {
+                //====================//
+                // Izbacivanje karata //
+                //====================//
+                Console.WriteLine("=== DISCARD FAZA ===");
+
+                foreach (var k in klijenti)
+                    SendLine(k.Socket, "IZBACI");
+
+                var discardOdgovori = CekajPorukeOdSvih(klijenti);
+
+                foreach (var o in discardOdgovori)
+                    Console.WriteLine($"Discard {o.Key.RemoteEndPoint}: {o.Value}");
+
+                //====================//
+                // Aktiviranje karata //
+                //====================//
+                Console.WriteLine("=== PLAY FAZA ===");
+
+                foreach (var k in klijenti)
+                    SendLine(k.Socket, "ODIGRAJ");
+
+                var playOdgovori = CekajPorukeOdSvih(klijenti);
+
+                foreach (var o in playOdgovori)
+                {
+                    string msg = o.Value;
+                    string[] delovi = msg.Split('|');
+                    if (delovi.Count() > 1)
+                    {
+                        if (delovi[0] == "AKTIVIRAM")
+                            AktivirajKartu(trake, delovi);
+                    }
+                }
+
+                //===========================//
+                // Update-ovanje stanja mape //
+                //===========================//
+
+                PomeriProtivnike(trake);
+                //protivnikSpawner.SpamovanjeProtivnika(trake, protivnici, trenutniPotez++);
+
+                IscrtajTrake(trake);
+
+                foreach (var k in klijenti)
+                {
+                    PosaljiMapu(k.Socket, trake);
+                    PosaljiKarte(k.Socket, dodelaSpila.DodeliKarteIzSpila(karte, brojIgraca));
+                }
+            }
+
+            //Console.ReadKey();
         }
     }
 }
