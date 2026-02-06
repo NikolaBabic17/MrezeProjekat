@@ -31,6 +31,11 @@ namespace Server.Klase
                 for (int i = 0; i < 3 + brojPoteza; i++)
                 {
                     int trakaIndex = rand.Next(trake.Count);
+                    do
+                    {
+                        trakaIndex = rand.Next(trake.Count);
+                    } while(trake[trakaIndex].BrojZidinaZamka <= 0);
+
                     int protivnikIndex = rand.Next(protivnici.Count);
 
                     Protivnik izabraniProtivnik = protivnici[protivnikIndex];

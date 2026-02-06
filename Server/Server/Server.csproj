@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Interfejs\ILogikaSpila.cs" />
     <Compile Include="Interfejs\INapraviMapu.cs" />
+    <Compile Include="Interfejs\IPrebaciProtivnike.cs" />
     <Compile Include="Interfejs\ISpamovanjeProtivnika.cs" />
     <Compile Include="Interfejs\IZapocniIgru.cs" />
     <Compile Include="Interfejs\ISpil.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Klase\Karta.cs" />
     <Compile Include="Klase\KreirajMapu.cs" />
     <Compile Include="Klase\KreirajSpit.cs" />
+    <Compile Include="Klase\PrebaciProtivnike.cs" />
     <Compile Include="Klase\Protivnik.cs" />
     <Compile Include="Klase\SpamovanjeProtivnika.cs" />
     <Compile Include="Klase\Traka.cs" />
