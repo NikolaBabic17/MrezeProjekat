@@ -30,6 +30,7 @@ namespace Server
 
             for (int i = 0; i < trake.Count; i++)
             {
+                Console.WriteLine("-----------------------------------------------------------------------------------------------");
                 Console.WriteLine($"Traka{i} - {trake[i].BojaTrake} - Hp {trake[i].BrojZidinaZamka}");
                 Console.WriteLine("[Suma]                [Strelac]             [Vitez]               [Macevalac]           [Zamak]");
                 foreach(var p in trake[i].SumaZona)
@@ -77,11 +78,11 @@ namespace Server
         private void PosaljiMapu(Socket igrac, List<Traka> trake)
         {
             // MAPSTART
-            // TRACK 0 Plava 2
-            // STRELAC ENEMY Goblin 1
+            // TRACK|0|Plava|2
+            // STRELAC|ENEMY|Goblin|1
             // ENDTRACK
-            // TRACK 1 Plava 2
-            // VITEZ ENEMY Trol 3
+            // TRACK|1|Plava|2
+            // VITEZ|ENEMY|Trol|3
             // ENDTRACK
             // MAPEND
             SendLine(igrac, "MAPSTART");
@@ -90,19 +91,19 @@ namespace Server
             {
                 Traka t = trake[i];
 
-                SendLine(igrac, $"TRACK {i} {t.BojaTrake} {t.BrojZidinaZamka}");
+                SendLine(igrac, $"TRACK|{i}|{t.BojaTrake}|{t.BrojZidinaZamka}");
 
                 foreach (Protivnik p in t.SumaZona) {
-                    SendLine(igrac, $"SUMA ENEMY {p.Ime} {p.Poeni}");
+                    SendLine(igrac, $"SUMA|ENEMY|{p.Ime}|{p.Poeni}");
                 }
                 foreach (Protivnik p in t.StrelacZona) {
-                    SendLine(igrac, $"STRELAC ENEMY {p.Ime} {p.Poeni}");
+                    SendLine(igrac, $"STRELAC|ENEMY|{p.Ime}|{p.Poeni}");
                 }
                 foreach (Protivnik p in t.VitezZona) {
-                    SendLine(igrac, $"VITEZ ENEMY {p.Ime} {p.Poeni}");
+                    SendLine(igrac, $"VITEZ|ENEMY|{p.Ime}|{p.Poeni}");
                 }
                 foreach (Protivnik p in t.MacevalacZona) {
-                    SendLine(igrac, $"MACEVALAC ENEMY {p.Ime} {p.Poeni}");
+                    SendLine(igrac, $"MACEVALAC|ENEMY|{p.Ime}|{p.Poeni}");
                 }
 
                 SendLine(igrac, "ENDTRACK");
@@ -203,16 +204,35 @@ namespace Server
             }
         }
 
+        bool TryReceive(Socket s, byte[] buf, out int bytes)
+        {
+            bytes = 0;
+
+            try
+            {
+                bytes = s.Receive(buf);
+
+                if (bytes == 0)
+                    return false;
+
+                return true;
+            }
+            catch (SocketException)
+            {
+                return false;
+            }
+        }
         private Dictionary<Socket, string> CekajPorukeOdSvih(List<ClientState> klijenti)
         {
             Dictionary<Socket, string> odgovori = new Dictionary<Socket, string>();
+            List<ClientState> disconnected = new List<ClientState>();
 
-            while (odgovori.Count < klijenti.Count)
+            while (odgovori.Count < klijenti.Count - disconnected.Count)
             {
                 List<Socket> read = new List<Socket>();
 
                 foreach (var k in klijenti)
-                    if (!odgovori.ContainsKey(k.Socket))
+                    if (!odgovori.ContainsKey(k.Socket) && !disconnected.Contains(k))
                         read.Add(k.Socket);
 
                 Socket.Select(read, null, null, 100000);
@@ -220,15 +240,32 @@ namespace Server
                 foreach (Socket s in read)
                 {
                     byte[] buf = new byte[1024];
-                    int bytes = s.Receive(buf);
 
-                    if (bytes <= 0)
+                    if (!TryReceive(s, buf, out int bytes))
+                    {
+                        Console.WriteLine($"Igrac se diskonektovao: {s.RemoteEndPoint}");
+
+                        var cs = klijenti.First(x => x.Socket == s);
+                        disconnected.Add(cs);
                         continue;
+                    }
 
                     string msg = Encoding.UTF8.GetString(buf, 0, bytes).Trim();
-
                     odgovori[s] = msg;
                 }
+            }
+
+            // Obrisi igraca koji se diskonektovao
+            foreach (var d in disconnected)
+            {
+                klijenti.Remove(d);
+
+                try { d.Socket.Close(); } catch { }
+            }
+            if(klijenti.Count() == 0)
+            {
+                Console.WriteLine("Svi igraci su se diskonektovali");
+                Environment.Exit(0);
             }
 
             return odgovori;
@@ -250,6 +287,40 @@ namespace Server
                 t.SumaZona.Clear();
             }
         }
+
+        enum GameResult
+        {
+            None,
+            Win,
+            Lose
+        }
+        GameResult ProveriKrajIgre(List<Traka> trake)
+        {
+            int ukupnoZidina = trake.Sum(t => t.BrojZidinaZamka);
+            if (ukupnoZidina <= 0)
+                return GameResult.Lose;
+
+            bool imaProtivnika =
+                trake.Any(t =>
+                    t.SumaZona.Count > 0 ||
+                    t.StrelacZona.Count > 0 ||
+                    t.VitezZona.Count > 0 ||
+                    t.MacevalacZona.Count > 0
+                );
+
+            if (!imaProtivnika)
+                return GameResult.Win;
+
+            return GameResult.None;
+        }
+        void PosaljiKrajIgre(List<ClientState> klijenti, GameResult rezultat)
+        {
+            string msg = rezultat == GameResult.Win ? "GAMEWIN" : "GAMELOSE";
+
+            foreach (var k in klijenti)
+                SendLine(k.Socket, msg);
+        }
+
 
         public void Run()
         {
@@ -339,7 +410,7 @@ namespace Server
                 klijenti.Add(new ClientState { Socket = s });
             }
 
-            //int trenutniPotez = 0;
+            int trenutniPotez = 0;
             //===========//
             // Main loop //
             //===========//
@@ -354,9 +425,22 @@ namespace Server
                     SendLine(k.Socket, "IZBACI");
 
                 var discardOdgovori = CekajPorukeOdSvih(klijenti);
-
+                
                 foreach (var o in discardOdgovori)
                     Console.WriteLine($"Discard {o.Key.RemoteEndPoint}: {o.Value}");
+
+                //====================//
+                // SWAP FAZA (UDP)    //
+                //====================//
+                if (brojIgraca > 1)
+                {
+                    Console.WriteLine("=== SWAP FAZA ===");
+
+                    foreach (var k in klijenti)
+                        SendLine(k.Socket, "SWAP");
+
+                    var swapOdgovori = CekajPorukeOdSvih(klijenti);
+                }
 
                 //====================//
                 // Aktiviranje karata //
@@ -384,9 +468,18 @@ namespace Server
                 //===========================//
 
                 PomeriProtivnike(trake);
-                //protivnikSpawner.SpamovanjeProtivnika(trake, protivnici, trenutniPotez++);
+                protivnikSpawner.SpamovanjeProtivnika(trake, protivnici, trenutniPotez++);
 
                 IscrtajTrake(trake);
+
+                GameResult rezultat = ProveriKrajIgre(trake);
+                if (rezultat != GameResult.None)
+                {
+                    Console.WriteLine("Kraj igre: " + rezultat);
+
+                    PosaljiKrajIgre(klijenti, rezultat);
+                    break;
+                }
 
                 foreach (var k in klijenti)
                 {
@@ -395,7 +488,9 @@ namespace Server
                 }
             }
 
-            //Console.ReadKey();
+            udpSocket.Close();
+            tcpListener.Close();
+            Console.ReadKey();
         }
     }
 }

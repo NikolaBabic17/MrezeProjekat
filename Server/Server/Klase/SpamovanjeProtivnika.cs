@@ -30,17 +30,26 @@ namespace Server.Klase
                 //Broj protivnika se konstantno povecava
                 for (int i = 0; i < 3 + brojPoteza; i++)
                 {
-                    int trakaIndex = rand.Next(trake.Count);
-                    do
+                    bool prazneTrake = false;
+                    foreach(var t in trake)
                     {
-                        trakaIndex = rand.Next(trake.Count);
-                    } while(trake[trakaIndex].BrojZidinaZamka <= 0);
+                        if (t.BrojZidinaZamka > 0)
+                            prazneTrake = true;
+                    }
+                    if (prazneTrake)
+                    {
+                        int trakaIndex = rand.Next(trake.Count);
+                        do
+                        {
+                            trakaIndex = rand.Next(trake.Count);
+                        } while (trake[trakaIndex].BrojZidinaZamka <= 0);
 
-                    int protivnikIndex = rand.Next(protivnici.Count);
+                        int protivnikIndex = rand.Next(protivnici.Count);
 
-                    Protivnik izabraniProtivnik = protivnici[protivnikIndex];
-                    trake[trakaIndex].SumaZona.Add(izabraniProtivnik);
-                    protivnici.RemoveAt(protivnikIndex);
+                        Protivnik izabraniProtivnik = protivnici[protivnikIndex];
+                        trake[trakaIndex].SumaZona.Add(izabraniProtivnik);
+                        protivnici.RemoveAt(protivnikIndex);
+                    }
                 }
             }
         }

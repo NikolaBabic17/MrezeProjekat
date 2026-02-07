@@ -32,6 +32,7 @@ namespace Client
 
             for (int i = 0; i < trake.Count; i++)
             {
+                Console.WriteLine("-----------------------------------------------------------------------------------------------");
                 Console.WriteLine($"Traka{i} - {trake[i].BojaTrake} - Hp {trake[i].BrojZidinaZamka}");
                 Console.WriteLine("[Suma]                [Strelac]             [Vitez]               [Macevalac]           [Zamak]");
                 foreach (var p in trake[i].SumaZona)
@@ -70,7 +71,7 @@ namespace Client
         //========================//
         private void ParsirajMapu(List<Traka> trake, ref Traka trenutnaTraka, string linija)
         {
-            string[] part = linija.Split(' ');
+            string[] part = linija.Split('|');
 
             if (part[0] == "TRACK")
             {
@@ -203,6 +204,65 @@ namespace Client
             igrac.Send(data);
         }
 
+        void UdpSwapListener(Socket udpSocket, List<Karta> karte)
+        {
+            byte[] buf = new byte[1024];
+            EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
+
+            while (true)
+            {
+                int bytes = udpSocket.ReceiveFrom(buf, ref remote);
+                string msg = Encoding.UTF8.GetString(buf, 0, bytes);
+
+                string[] p = msg.Split('|');
+
+                if (p[0] == "SWAPREQ")
+                {
+                    Console.WriteLine("\nSwap request received!");
+
+                    Karta primljena = new Karta(
+                        p[1],
+                        p[2],
+                        (BojaKarte)Enum.Parse(typeof(BojaKarte), p[3])
+                    );
+
+                    Console.WriteLine($"They offer: {primljena.Naziv}");
+
+                    if (karte.Count == 0)
+                    {
+                        SendUdp(udpSocket, "SWAPNO", remote);
+                        continue;
+                    }
+
+                    Console.WriteLine("Choose card index to return (-1 reject):");
+                    int izbor = int.Parse(Console.ReadLine());
+
+                    if (izbor < 0 || izbor >= karte.Count)
+                    {
+                        SendUdp(udpSocket, "SWAPNO", remote);
+                        continue;
+                    }
+
+                    Karta moja = karte[izbor];
+
+                    string resp =
+                        $"SWAPOK|{moja.Naziv}|{moja.Efekat}|{moja.Boja}";
+
+                    SendUdp(udpSocket, resp, remote);
+
+                    karte.RemoveAt(izbor);
+                    karte.Add(primljena);
+                }
+            }
+        }
+
+        void SendUdp(Socket udp, string msg, EndPoint ep)
+        {
+            byte[] d = Encoding.UTF8.GetBytes(msg);
+            udp.SendTo(d, ep);
+        }
+
+
         public void Run()
         {
             //=============//
@@ -276,7 +336,9 @@ namespace Client
             bool citamUDPInfo = false;
             Traka trenutnaTraka = null;
 
-            while (true)
+            //Task.Run(() => UdpSwapListener(udpSocket, karte));
+            bool running = true;
+            while (running)
             {
                 int dataReceived = tcpSocket.Receive(recvBuffer);
                 if (dataReceived == 0)
@@ -377,6 +439,68 @@ namespace Client
                         continue;
                     }
 
+                    if (linija == "SWAP")
+                    {
+                        Console.WriteLine("=== SWAP FAZA ===");
+
+                        Console.WriteLine("Swap? y/n");
+                        string ans = Console.ReadLine();
+
+                        if (ans.ToLower() == "y")
+                        {
+                            IspisiKarte(karte);
+                            IspisiUDPInfo(igraciUDP);
+
+                            Console.Write("Card index: ");
+                            int ci = int.Parse(Console.ReadLine());
+
+                            Console.Write("Player index: ");
+                            int pi = int.Parse(Console.ReadLine());
+
+                            if (ci >= 0 && ci < karte.Count &&
+                                pi >= 0 && pi < igraciUDP.Count)
+                            {
+                                Karta k = karte[ci];
+                                IPEndPoint target = igraciUDP[pi];
+
+                                string req =
+                                    $"SWAPREQ|{k.Naziv}|{k.Efekat}|{k.Boja}";
+
+                                SendUdp(udpSocket, req, target);
+
+                                byte[] buf = new byte[1024];
+                                EndPoint r = new IPEndPoint(IPAddress.Any, 0);
+
+                                int b = udpSocket.ReceiveFrom(buf, ref r);
+                                string resp = Encoding.UTF8.GetString(buf, 0, b);
+
+                                if (resp.StartsWith("SWAPOK"))
+                                {
+                                    string[] pr = resp.Split('|');
+
+                                    Karta nova = new Karta(
+                                        pr[1],
+                                        pr[2],
+                                        (BojaKarte)Enum.Parse(typeof(BojaKarte), pr[3])
+                                    );
+
+                                    karte.RemoveAt(ci);
+                                    karte.Add(nova);
+
+                                    Console.WriteLine("Swap success!");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Swap rejected");
+                                }
+                            }
+                        }
+
+                        SendLine(tcpSocket, "SWAPDONE");
+                        continue;
+                    }
+
+
                     if (linija == "ODIGRAJ")
                     {
                         Console.WriteLine("\n===== ODIGRAJ POTEZ =====\n");
@@ -445,6 +569,20 @@ namespace Client
                         continue;
                     }
 
+                    if (linija == "GAMEWIN")
+                    {
+                        Console.WriteLine("\n===== POBEDA =====");
+                        running = false;
+                        break;
+                    }
+
+                    if (linija == "GAMELOSE")
+                    {
+                        Console.WriteLine("\n===== PORAZ =====");
+                        running = false;
+                        break;
+                    }
+
 
                     if (citamMapu)
                     {
@@ -460,24 +598,9 @@ namespace Client
                     }
                 }
             }
-            /*
-            // NOTE: Ispis karata
-            Console.WriteLine("\nDodeljene karte:");
-
-            int broj = 1;
-            foreach (Karta k in mojeKarte)
-            {
-                Console.WriteLine(
-                    $"{broj++}. {k.Naziv} ({k.Boja}) - {k.Efekat}"
-                );
-            }
-
-            Console.WriteLine("\nKlijent spreman za igru.");
-            Console.ReadKey();
-
+            
             tcpSocket.Close();
             udpSocket.Close();
-            */
         }
     }
 }
