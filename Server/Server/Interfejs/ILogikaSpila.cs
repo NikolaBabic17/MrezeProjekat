@@ -11,5 +11,6 @@ namespace Server.Interfejs
     {
         List<Karta> DodeliKarteIzSpila(List<Karta> spil, int brojIgraca);
         void VratiKarteNazad(List<Karta> KarteZaVracanje, List<Karta> spil);
+        List<Karta> DopuniKarte(List<Karta> spil, int brojPotrebnihK);
     }
 }

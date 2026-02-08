@@ -468,7 +468,7 @@ namespace Server
                 //===========================//
 
                 PomeriProtivnike(trake);
-                protivnikSpawner.SpamovanjeProtivnika(trake, protivnici, trenutniPotez++);
+                protivnikSpawner.SpamujProtivnike(trake, protivnici, trenutniPotez++);
 
                 IscrtajTrake(trake);
 
@@ -484,7 +484,7 @@ namespace Server
                 foreach (var k in klijenti)
                 {
                     PosaljiMapu(k.Socket, trake);
-                    PosaljiKarte(k.Socket, dodelaSpila.DodeliKarteIzSpila(karte, brojIgraca));
+                    PosaljiKarte(k.Socket, dodelaSpila.DopuniKarte(karte, 1));
                 }
             }
 

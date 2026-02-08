@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Server.Interfejs
 {
-    internal interface ISpamovanjeProtivnika
+    public interface ISpamovanjeProtivnika
     {
-        void SpamovanjeProtivnika(List<Traka> trake, List<Protivnik> protivnici, int brojPoteza);
+        void SpamujProtivnike(List<Traka> trake, List<Protivnik> protivnici, int brojPoteza);
+        void SpecialniProtivnici(List<Traka> trake);
     }
 }
