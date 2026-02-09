@@ -370,7 +370,6 @@ namespace Client
 
                     if(linija == "KARTESTART")
                     {
-                        karte.Clear();
                         citamKarte = true;
                         continue;
                     }
